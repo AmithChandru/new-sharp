@@ -16,17 +16,27 @@ function App() {
   const fetchMoviesHandler = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch('https://swapi.dev/api/films');
+      const response = await fetch('https://react-movies-8029a-default-rtdb.asia-southeast1.firebasedatabase.app/movies.json');
+      console.log(response.json());
       if (!response.ok) {
         throw new Error('Something went wrong... retrying');
       }
       const data = await response.json();
-      let movies = data.results.map((ele) => {
+      const loadedMovies = [];
+      for (const key in data) {
+        loadedMovies.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate
+        })
+      }
+      let movies = loadedMovies.map((ele) => {
         return {
-          id: ele.episode_id,
+          id: ele.id,
           title: ele.title,
-          openingText: ele.opening_crawl,
-          releaseDate: ele.release_date
+          openingText: ele.openingText,
+          releaseDate: ele.releaseDate
         }
       })
       setMovies(movies);
@@ -43,17 +53,44 @@ function App() {
     fetchMoviesHandler();
   }, [])
 
-  const addMovieHandler = () => {
+  const addMovieHandler = async () => {
     let newMovie = {
-      id: Math.floor(Math.random() * 100),
       title: title,
       openingText: openingText,
       releaseDate: releaseDate
     };
-    setMovies((state) => [
-      ...state,
-      newMovie
-    ]);
+    await fetch('https://react-movies-8029a-default-rtdb.asia-southeast1.firebasedatabase.app/movies.json', {
+      method: 'POST',
+      body: JSON.stringify(newMovie),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+  }
+
+  const removeMovieHandler = async (id) => {
+    const response = await (await fetch('https://react-movies-8029a-default-rtdb.asia-southeast1.firebasedatabase.app/movies.json')).json();
+    let updatedList = [];
+    console.log(response);
+    for (const key in response) {
+      if (key !== id) {
+        updatedList.push({
+          id: key,
+          title: response[key].title,
+          openingText: response[key].openingText,
+          releaseDate: response[key].releaseDate
+        });
+      }
+    }
+    console.log(updatedList, id);
+    await fetch('https://react-movies-8029a-default-rtdb.asia-southeast1.firebasedatabase.app/movies.json', {
+      method: 'POST',
+      body: JSON.stringify(updatedList),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    fetchMoviesHandler();
   }
 
   return (
@@ -71,7 +108,7 @@ function App() {
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
       <section>
-        {!loading && <MoviesList movies={moviesList} />}
+        {!loading && <MoviesList movies={moviesList} deleteMovie={removeMovieHandler} />}
         {loading && <p>Loading...</p>}
         {!loading && error && <p>{error}</p>}
         {reloading && <button onClick={() => {setReloading(false)}} style={{backgroundColor: 'red'}}>Cancel</button>}
