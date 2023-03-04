@@ -9,6 +9,9 @@ function App() {
   const [moviesList, setMovies] = useState([]);
   const [error, setError] = useState(null);
   const [reloading, setReloading] = useState(false);
+  const [title, setTitle] = useState('');
+  const [openingText, setOpeningText] = useState('');
+  const [releaseDate, setReleaseDate] = useState('');
 
   const fetchMoviesHandler = useCallback(async () => {
     setLoading(true);
@@ -40,8 +43,30 @@ function App() {
     fetchMoviesHandler();
   }, [])
 
+  const addMovieHandler = () => {
+    let newMovie = {
+      id: Math.floor(Math.random() * 100),
+      title: title,
+      openingText: openingText,
+      releaseDate: releaseDate
+    };
+    setMovies((state) => [
+      ...state,
+      newMovie
+    ]);
+  }
+
   return (
     <React.Fragment>
+      <section>
+        <span>Title</span>
+        <input className='inputBox' onChange={(e) => setTitle(e.target.value)}/>
+        <span>Opening Text</span>
+        <textarea className='inputBox' onChange={(e) => setOpeningText(e.target.value)}/>
+        <span>Release Date</span>
+        <input className='inputBox' onChange={(e) => setReleaseDate(e.target.value)}/>
+        <button onClick={addMovieHandler}>Add Movie</button>
+      </section>
       <section>
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
